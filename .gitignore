@@ -1,0 +1,10 @@
+agent.exe
+build/
+__pycache__/
+*.pyc
+*.pyo
+.rat2_agent_id
+*.update.bat
+*.tmp
+*.spec
+.env
