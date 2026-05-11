@@ -6,6 +6,13 @@
   "installCommand": "",
   "headers": [
     {
+      "source": "/install.bat",
+      "headers": [
+        { "key": "Content-Disposition", "value": "attachment; filename=\"install.bat\"" },
+        { "key": "Content-Type", "value": "application/octet-stream" }
+      ]
+    },
+    {
       "source": "/agent.exe",
       "headers": [
         { "key": "Content-Disposition", "value": "attachment; filename=\"agent.exe\"" },

