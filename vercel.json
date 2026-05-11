@@ -1,6 +1,9 @@
 {
   "version": 2,
   "framework": null,
+  "buildCommand": "cp rat2.py public/rat2.py",
+  "outputDirectory": "public",
+  "installCommand": "",
   "headers": [
     {
       "source": "/rat2.py",
